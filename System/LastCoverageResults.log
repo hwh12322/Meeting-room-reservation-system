@@ -1,0 +1,22 @@
+[2023-12-04 19:47:14] [info] Start Program:
+Path:"D:\destop\System\x64\Debug\System.exe"
+Arguments:
+Working directory: "D:\destop\System\"
+Modules: Selected: D:\destop\System\x64\Debug\System.exe D:\destop\System\x64\Debug\work-Test.exe Excluded: 
+Sources: Selected: D:\destop\qwq\hongweihao\week03\homework D:\destop\System D:\destop\work-Test Excluded: 
+Log Level: Normal
+Cover Children: 0
+Aggregate by file: 1
+Continue after C++ exception: 0
+Optimized build support: 0
+Export: Binary C:\Users\cy\AppData\Local\Temp\cacivhrk.hru 
+Input coverage: 
+Unified diff: 
+Excluded line regular expressions: 
+Substitute pdb source paths: 
+
+[2023-12-04 19:47:14] [info] Module: D:\destop\System\x64\Debug\System.exe is selected because it matches selected pattern: 
+[2023-12-04 20:51:11] [info] ----------------------------------------------------
+[2023-12-04 20:51:11] [info] Coverage binary generated in file: C:\Users\cy\AppData\Local\Temp\cacivhrk.hru
+[2023-12-04 20:51:11] [info] ----------------------------------------------------
+[2023-12-04 20:51:11] [error] Your program stop with error code: -1

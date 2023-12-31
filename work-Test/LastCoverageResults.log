@@ -1,0 +1,24 @@
+[2023-12-04 20:05:31] [info] Start Program:
+Path:"D:\destop\System\x64\Debug\work-Test.exe"
+Arguments:
+Working directory: "D:\destop\work-Test\"
+Modules: Selected: D:\destop\System\x64\Debug\System.exe D:\destop\System\x64\Debug\work-Test.exe Excluded: 
+Sources: Selected: D:\destop\qwq\hongweihao\week03\homework D:\destop\System D:\destop\work-Test Excluded: 
+Log Level: Normal
+Cover Children: 0
+Aggregate by file: 1
+Continue after C++ exception: 0
+Optimized build support: 0
+Export: Html D:\destop Binary C:\Users\cy\AppData\Local\Temp\vs4oryh1.zmv 
+Input coverage: 
+Unified diff: 
+Excluded line regular expressions: 
+Substitute pdb source paths: 
+
+[2023-12-04 20:05:31] [info] Module: D:\destop\System\x64\Debug\work-Test.exe is selected because it matches selected pattern: D:\destop\System\x64\Debug\work-Test.exe
+[2023-12-04 20:05:32] [info] ----------------------------------------------------
+[2023-12-04 20:05:32] [info] Coverage generated in Folder D:\destop
+[2023-12-04 20:05:32] [info] ----------------------------------------------------
+[2023-12-04 20:05:32] [info] ----------------------------------------------------
+[2023-12-04 20:05:32] [info] Coverage binary generated in file: C:\Users\cy\AppData\Local\Temp\vs4oryh1.zmv
+[2023-12-04 20:05:32] [info] ----------------------------------------------------

@@ -1,0 +1,167 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>test.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+	<body onload="prettyPrint()">
+        <h4></h4>
+		<pre class="prettyprint lang-cpp linenums">
+#include "pch.h"
+
+class DatabaseManagerTest : public ::testing::Test {
+protected:
+    // åè®¾åæ°
+    std::string employeeID = "1";
+    std::string name = "1";
+    std::string username = "1";
+    std::string password = "1";
+    UserType userType = UserType::Business;
+    DatabaseManager dbManager = DatabaseManager("127.0.0.1", "root", "hwh272106", "Kingsofttest");
+<span style = "background-color:#dfd">    void SetUp() {};
+    void TearDown() {};</span>
+
+};
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, AddUser) {</span>
+    // æµè¯ addUser æ¹æ³
+<span style = "background-color:#dfd">    bool result = dbManager.addUser(employeeID, name, username, password, userType);
+    EXPECT_TRUE(result);  // é¢æ addUser åºè¯¥è¿å true
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, AddExistingUser) {
+    bool firstAttempt = dbManager.addUser("existing_employee", "Existing User", "existinguser", "password", UserType::Admin);
+    bool secondAttempt = dbManager.addUser("existing_employee", "Existing User", "existinguser", "password", UserType::Admin);
+    EXPECT_TRUE(firstAttempt);
+    EXPECT_FALSE(secondAttempt); // é¢æç¬¬äºæ¬¡æ·»å ç¸åçç¨æ·åºè¯¥è¿å false
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, BookRoomTest) {
+    bool result = dbManager.bookRoom(1, 1, "2023-12-04", TimeSlot::Afternoon, BookingStatus::Pending);
+    bool result1 = dbManager.bookRoom(1, 1, "2023-12-04", TimeSlot::Afternoon, BookingStatus::Pending);
+    dbManager.bookRoom(1, 1, "2023-12-05", TimeSlot::Afternoon, BookingStatus::Pending);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(result1);
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, ViewUsers) {
+    dbManager.viewUsers(UserType::Business);
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, ViewMeetingrooms) {
+    dbManager.viewMeetingRooms();
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, ViewAllBookings) {
+    dbManager.viewAllBookings();
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, viewBookingsByUser) {
+    dbManager.viewBookingsByUser(1);
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, CancelBooking) {
+    bool result = dbManager.cancelBooking(2);
+    EXPECT_TRUE(result);  // é¢æ cancelBooking åºè¯¥è¿å true</span>
+
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, getPendingBookingID) {
+   int result = dbManager.getPendingBookingID();
+    EXPECT_EQ(result,1); </span>
+
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, updateBookingStatus) {</span>
+    // æµè¯ updateBookingStatus æ¹æ³
+<span style = "background-color:#dfd">    bool result = dbManager.updateBookingStatus(1, BookingStatus::Approved);
+    EXPECT_TRUE(result);  // é¢æ updateBookingStatus åºè¯¥è¿å true
+}</span>
+
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, UpdatePasswordTest) {
+    bool result = dbManager.updatePassword(1, "123456");
+    EXPECT_TRUE(result);</span>
+
+<span style = "background-color:#dfd">}</span>
+
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, GetUserInfo) {</span>
+    // æµè¯ getUserInfo æ¹æ³
+<span style = "background-color:#dfd">    User userInfo = dbManager.getUserByUsernameAndPassword("1","123456");
+    EXPECT_EQ(userInfo.getName(), "1"); // éªè¯è·åçç¨æ·ä¿¡æ¯æ¯å¦æ­£ç¡®
+    EXPECT_EQ(userInfo.getEmployeeID(), "1"); 
+    EXPECT_EQ(userInfo.getPassword(), "123456");
+    EXPECT_EQ(userInfo.getUserType(), userType);
+    EXPECT_EQ(userInfo.getUserID(), 1);
+    EXPECT_EQ(userInfo.getUsername(), "1");
+}</span>
+
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, handleAssociatedData) {</span>
+    // æµè¯ handleAssociatedData æ¹æ³
+<span style = "background-color:#dfd">    bool result = dbManager.handleAssociatedData(1);
+    bool result1 = dbManager.handleAssociatedData(9999);
+    bool result2 = dbManager.handleAssociatedData(2);
+    EXPECT_TRUE(result);  // é¢æ handleAssociatedData åºè¯¥è¿å true
+    EXPECT_FALSE(result1);
+    EXPECT_FALSE(result2);
+}
+TEST_F(DatabaseManagerTest, DeleteUser) {</span>
+    // æµè¯ deleteUser æ¹æ³
+<span style = "background-color:#dfd">    bool result = dbManager.deleteUser(1);
+    EXPECT_TRUE(result);  // é¢æ deleteUser åºè¯¥è¿å true</span>
+
+<span style = "background-color:#dfd">}</span>
+
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, ClearBookings) {</span>
+    // æµè¯ clearBookings æ¹æ³
+<span style = "background-color:#dfd">    bool result = dbManager.clearBookings();
+    EXPECT_TRUE(result);  // é¢æ clearBookings åºè¯¥è¿å true</span>
+
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, UserTypeConversion) {
+    EXPECT_EQ(dbManager.stringToUserType("Business"), UserType::Business);
+    EXPECT_EQ(dbManager.stringToUserType("Executive"), UserType::Executive);
+    EXPECT_EQ(dbManager.stringToUserType("Admin"), UserType::Admin);</span>
+
+<span style = "background-color:#dfd">    EXPECT_EQ(dbManager.userTypeToString(UserType::Business), "Business");
+    EXPECT_EQ(dbManager.userTypeToString(UserType::Executive), "Executive");
+    EXPECT_EQ(dbManager.userTypeToString(UserType::Admin), "Admin");
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, DeleteNonExistingUser) {
+    bool result = dbManager.deleteUser(99999); // åè®¾ 99999 æ¯ä¸ä¸ªä¸å­å¨çç¨æ·ID
+    EXPECT_FALSE(result); // é¢æå é¤ä¸å­å¨çç¨æ·åºè¯¥å¤±è´¥
+}</span>
+
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, CancelNonExistingBooking) {
+    bool result = dbManager.cancelBooking(99999); // åè®¾ 99999 æ¯ä¸ä¸ªä¸å­å¨çé¢çº¦ID
+    EXPECT_FALSE(result); // é¢æåæ¶ä¸å­å¨çé¢çº¦åºè¯¥å¤±è´¥
+}</span>
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, UpdatePasswordNonExistingUser) {
+    bool result = dbManager.updatePassword(99999, "newPassword"); // åè®¾ 99999 æ¯ä¸ä¸ªä¸å­å¨çç¨æ·ID
+    EXPECT_FALSE(result); // é¢ææ´æ°ä¸å­å¨ç¨æ·çå¯ç åºè¯¥å¤±è´¥
+}</span>
+
+
+
+<span style = "background-color:#dfd">TEST_F(DatabaseManagerTest, UpdateStatusOfProcessedBooking) {</span>
+    // åæ·»å ä¸ä¸ªé¢çº¦ï¼å¹¶å°å¶ç¶æè®¾ç½®ä¸ºå·²å®¡æ¹
+<span style = "background-color:#dfd">    dbManager.bookRoom(3, 4, "2023-12-07", TimeSlot::Afternoon, BookingStatus::Pending);
+    int bookingID = dbManager.getPendingBookingID();
+    dbManager.updateBookingStatus(bookingID, BookingStatus::Approved);</span>
+
+    // å°è¯åæ¬¡æ´æ°åä¸ä¸ªé¢çº¦çç¶æ
+<span style = "background-color:#dfd">    bool result = dbManager.updateBookingStatus(bookingID, BookingStatus::Rejected);
+    EXPECT_FALSE(result); // é¢ææ æ³æ´æ°å·²å¤ççé¢çº¦ç¶æ
+}</span>
+</pre>
+	</body>
+</html>

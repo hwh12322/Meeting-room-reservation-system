@@ -1,0 +1,651 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>DatabaseManager.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+	<body onload="prettyPrint()">
+        <h4></h4>
+		<pre class="prettyprint lang-cpp linenums">
+#include "DatabaseManager.h"
+// æé å½æ°
+DatabaseManager::DatabaseManager(const std::string&amp; db_host, const std::string&amp; db_user,
+<span style = "background-color:#dfd">                                 const std::string&amp; db_password, const std::string&amp; db_name) {
+    conn = mysql_init(NULL);
+    connect(db_host, db_user, db_password, db_name);
+}</span>
+
+// ææå½æ°
+<span style = "background-color:#dfd">DatabaseManager::~DatabaseManager() {
+    if (conn) {
+        mysql_close(conn);</span>
+    }
+<span style = "background-color:#dfd">}</span>
+
+// è¿æ¥æ°æ®åº
+void DatabaseManager::connect(const std::string&amp; db_host, const std::string&amp; db_user,
+<span style = "background-color:#dfd">                              const std::string&amp; db_password, const std::string&amp; db_name) {
+     conn = mysql_init(NULL);
+    if (!conn) {</span>
+<span style = "background-color:#fdd">        throw std::runtime_error("MySQL åå§åå¤±è´¥");</span>
+    }
+
+<span style = "background-color:#dfd">    if (!mysql_real_connect(conn, db_host.c_str(), db_user.c_str(), </span>
+                            db_password.c_str(), db_name.c_str(), 0, NULL, 0)) {
+<span style = "background-color:#fdd">        std::string error_msg = "è¿æ¥å°æ°æ®åºåºé: " + std::string(mysql_error(conn));
+        mysql_close(conn);
+        throw std::runtime_error(error_msg);
+    }</span>
+
+
+<span style = "background-color:#dfd">    if (mysql_set_character_set(conn, "utf8mb3")) {</span>
+<span style = "background-color:#fdd">        std::string error_msg = "è®¾ç½®å­ç¬¦ç¼ç å¤±è´¥: " + std::string(mysql_error(conn));
+        mysql_close(conn);
+        throw std::runtime_error(error_msg);
+    }</span>
+<span style = "background-color:#dfd">}</span>
+
+
+<span style = "background-color:#dfd">UserType DatabaseManager::stringToUserType(const std::string&amp; userTypeStr) const{
+    if (userTypeStr == "Business") {
+        return UserType::Business;
+    } else if (userTypeStr == "Executive") {
+        return UserType::Executive;
+    } else if (userTypeStr == "Admin") {
+        return UserType::Admin;</span>
+    }
+<span style = "background-color:#fdd">    throw std::runtime_error("æ æçç¨æ·ç±»å");</span>
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">std::string DatabaseManager::userTypeToString(const UserType usertype) const{
+    if (usertype == UserType::Business) {
+        std::string a = "Business";
+        return a;
+    } else if (usertype == UserType::Executive) {
+        std::string a = "Executive";
+        return a;
+    } else if (usertype == UserType::Admin) {
+        std::string a = "Admin";
+        return a;</span>
+    }
+<span style = "background-color:#fdd">    throw std::runtime_error("æ æçç¨æ·ç±»å");</span>
+<span style = "background-color:#dfd">}</span>
+
+
+
+bool DatabaseManager::addUser(const std::string&amp; employeeID, const std::string&amp; name, 
+                              const std::string&amp; username, const std::string&amp; password, 
+<span style = "background-color:#dfd">                              UserType userType) {</span>
+    // é¦åæ£æ¥ç¨æ·åæ¯å¦å·²å­å¨
+<span style = "background-color:#dfd">    std::string checkQuery = "SELECT * FROM Users WHERE Username = '" + username + "'";
+    if (mysql_query(conn, checkQuery.c_str()) == 0) {
+        MYSQL_RES* result = mysql_store_result(conn);
+        if (mysql_num_rows(result) &gt; 0) {  // ç¨æ·åå·²å­å¨
+            mysql_free_result(result);
+            return false;</span>
+        }
+<span style = "background-color:#dfd">        mysql_free_result(result);</span>
+    }
+    // æå¥æ°ç¨æ·
+<span style = "background-color:#dfd">    std::string userTypeStr = userTypeToString(userType); // è½¬æ¢ UserType æä¸¾ä¸ºå­ç¬¦ä¸²
+    std::string query = "INSERT INTO Users (EmployeeID, Name_, Username, Password_, UserType) VALUES ('" </span>
+                        + employeeID + "', '" + name + "', '" + username + "', '" 
+                        + password + "', '" + userTypeStr + "')";
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ·»å ç¨æ·å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return false;</span>
+    }
+<span style = "background-color:#dfd">    return true;
+}</span>
+
+
+<span style = "background-color:#dfd">void DatabaseManager::viewUsers(UserType userType) {
+    std::string userTypeStr = userTypeToString(userType); // è½¬æ¢ UserType æä¸¾ä¸ºå­ç¬¦ä¸²
+    std::string query = "SELECT EmployeeID, Name_, Username, Password_, UserType FROM Users WHERE UserType = '" </span>
+                        + userTypeStr + "'";
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢ç¨æ·å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "è·åæ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+    MYSQL_ROW row;
+<span style = "background-color:#dfd">    while ((row = mysql_fetch_row(result))) {
+        std::cout &lt;&lt; "EmployeeID: " &lt;&lt; row[0] &lt;&lt; ", "</span>
+                  &lt;&lt; "Name: " &lt;&lt; row[1] &lt;&lt; ", "
+                  &lt;&lt; "Username: " &lt;&lt; row[2] &lt;&lt; ", "
+                  &lt;&lt; "Password: " &lt;&lt; row[3] &lt;&lt; ", "  
+                  &lt;&lt; "UserType: " &lt;&lt; row[4] &lt;&lt; std::endl;
+<span style = "background-color:#dfd">    }</span>
+
+<span style = "background-color:#dfd">    mysql_free_result(result);
+}</span>
+
+
+<span style = "background-color:#dfd">void DatabaseManager::viewMeetingRooms() {</span>
+    // æ¥è¯¢æææé¢è®¢çä¼è®®å®¤
+<span style = "background-color:#dfd">    std::string queryWithBookings = "SELECT MeetingRooms.RoomName, MeetingRooms.Capacity, Bookings.Date_, Bookings.TimeSlot, Bookings.Status_ "</span>
+                                    "FROM MeetingRooms "
+                                    "JOIN Bookings ON MeetingRooms.RoomID = Bookings.RoomID "
+                                    "WHERE Bookings.Status_ = 'Approved' "
+                                    "ORDER BY MeetingRooms.RoomName, Bookings.Date_, Bookings.TimeSlot";
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, queryWithBookings.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢æé¢è®¢çä¼è®®å®¤ä¿¡æ¯å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* resultWithBookings = mysql_store_result(conn);
+    if (!resultWithBookings) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å­å¨æé¢è®¢çä¼è®®å®¤æ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+    MYSQL_ROW row;
+<span style = "background-color:#dfd">    while ((row = mysql_fetch_row(resultWithBookings))) {</span>
+<span style = "background-color:#fdd">        std::cout &lt;&lt; "ä¼è®®å®¤åç§°: " &lt;&lt; row[0] &lt;&lt; ", "</span>
+                  &lt;&lt; "å®¹é: " &lt;&lt; row[1] &lt;&lt; ", "
+                  &lt;&lt; "é¢çº¦æ¥æ: " &lt;&lt; row[2] &lt;&lt; ", "
+                  &lt;&lt; "æ¶æ®µ: " &lt;&lt; row[3] &lt;&lt; ", "
+                  &lt;&lt; "ç¶æ: " &lt;&lt; row[4] &lt;&lt; std::endl;
+<span style = "background-color:#fdd">    }</span>
+<span style = "background-color:#dfd">    mysql_free_result(resultWithBookings);</span>
+    // æ¥è¯¢æææ é¢è®¢çä¼è®®å®¤
+<span style = "background-color:#dfd">    std::string queryWithoutBookings = "SELECT RoomName, Capacity FROM MeetingRooms "</span>
+                                       "WHERE RoomID NOT IN (SELECT RoomID FROM Bookings WHERE Status_ = 'Approved')";
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, queryWithoutBookings.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢æ é¢è®¢çä¼è®®å®¤ä¿¡æ¯å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* resultWithoutBookings = mysql_store_result(conn);
+    if (!resultWithoutBookings) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å­å¨æ é¢è®¢çä¼è®®å®¤æ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+<span style = "background-color:#dfd">    while ((row = mysql_fetch_row(resultWithoutBookings))) {
+        std::cout &lt;&lt; "ä¼è®®å®¤åç§°: " &lt;&lt; row[0] &lt;&lt; ", "</span>
+                  &lt;&lt; "å®¹é: " &lt;&lt; row[1] &lt;&lt; ", "
+                  &lt;&lt; "é¢çº¦æ¥æ: æ é¢çº¦" &lt;&lt; ", "
+                  &lt;&lt; "æ¶æ®µ: æ " &lt;&lt; ", "
+                  &lt;&lt; "ç¶æ: æ é¢çº¦" &lt;&lt; std::endl;
+<span style = "background-color:#dfd">    }
+    mysql_free_result(resultWithoutBookings);
+}</span>
+
+<span style = "background-color:#dfd">bool DatabaseManager::clearBookings() {</span>
+    try {
+<span style = "background-color:#dfd">        beginTransaction(); // å¼å§äºå¡</span>
+
+<span style = "background-color:#dfd">        std::string query = "DELETE FROM Bookings";
+        if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ¸ç©ºé¢çº¦å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        commitTransaction(); // æäº¤äºå¡
+        return true;</span>
+<span style = "background-color:#fdd">    } catch (...) {
+        rollbackTransaction(); // ç¡®ä¿å¼å¸¸æ¶åæ»äºå¡
+        throw; // éæ°æåºå¼å¸¸
+    }</span>
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">bool DatabaseManager::deleteUser(int userID) {</span>
+    // æ£æ¥è´¦æ·æ¯å¦å­å¨ä¸æ¯å¦ä¸ºç®¡çå
+<span style = "background-color:#dfd">    std::string checkQuery = "SELECT UserType FROM Users WHERE UserID = " + std::to_string(userID);
+    if (mysql_query(conn, checkQuery.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢è´¦æ·å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return false;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ æ³è·åæ¥è¯¢ç»æ: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return false;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_ROW row = mysql_fetch_row(result);
+    if (!row) {
+        std::cerr &lt;&lt; "è´¦æ·ID " &lt;&lt; userID &lt;&lt; " ä¸å­å¨ã\n";
+        mysql_free_result(result);
+        return false;</span>
+    }
+
+<span style = "background-color:#dfd">    std::string userType = row[0];
+    mysql_free_result(result);</span>
+
+<span style = "background-color:#dfd">    if (userType == "Admin") {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "ä¸åè®¸å é¤ç®¡çåè´¦æ·ã\n";
+        return false;</span>
+    }
+
+    // æ§è¡å é¤æä½
+<span style = "background-color:#dfd">    std::string query = "DELETE FROM Users WHERE UserID = " + std::to_string(userID);
+    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å é¤è´¦æ·å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return false;</span>
+    }
+
+<span style = "background-color:#dfd">    return true;
+}</span>
+
+
+<span style = "background-color:#dfd">bool DatabaseManager::handleAssociatedData(int userID) {</span>
+    try {
+<span style = "background-color:#dfd">        beginTransaction();  // å¼å§æ°æ®åºäºå¡</span>
+
+<span style = "background-color:#dfd">        std::string checkQuery = "SELECT UserType FROM Users WHERE UserID = " + std::to_string(userID);
+        if (mysql_query(conn, checkQuery.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ¥è¯¢è´¦æ·å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction();
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        MYSQL_RES* result = mysql_store_result(conn);
+        if (!result) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ æ³è·åæ¥è¯¢ç»æ: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction();
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        MYSQL_ROW row = mysql_fetch_row(result);
+        if (!row) {
+            std::cerr &lt;&lt; "è´¦æ·ID " &lt;&lt; userID &lt;&lt; " ä¸å­å¨ã\n";
+            rollbackTransaction();
+            mysql_free_result(result);
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        std::string userType = row[0];
+        mysql_free_result(result);</span>
+
+<span style = "background-color:#dfd">        if (userType == "Admin") {
+            std::cerr &lt;&lt; "ä¸åè®¸å é¤ç®¡çåè´¦æ·ã\n";
+            rollbackTransaction();
+            return false;</span>
+        }
+
+        // å é¤ä¸ç¨æ·ç¸å³çé¢çº¦è®°å½
+<span style = "background-color:#dfd">        std::string query = "DELETE FROM Bookings WHERE UserID = " + std::to_string(userID);
+        if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "å é¤ç¨æ·é¢çº¦è®°å½å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); 
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        commitTransaction();  // æäº¤äºå¡
+        return true;</span>
+    }
+<span style = "background-color:#fdd">    catch (const std::exception&amp; e) {
+        std::cerr &lt;&lt; "å¤çå³èæ°æ®æ¶åçå¼å¸¸: " &lt;&lt; e.what() &lt;&lt; std::endl;
+        rollbackTransaction();  // åæ»äºå¡
+        return false;
+    }</span>
+<span style = "background-color:#dfd">}</span>
+
+
+<span style = "background-color:#dfd">bool DatabaseManager::bookRoom(int roomID, int userID, const std::string&amp; date,  TimeSlot timeSlot, BookingStatus status) {</span>
+    try {
+<span style = "background-color:#dfd">        beginTransaction(); // å¼å§äºå¡</span>
+
+        // æ£æ¥æ¯å¦å·²æç¸åçé¢è®¢
+<span style = "background-color:#dfd">        std::string timeSlotStr = (timeSlot == TimeSlot::Morning) ? "Morning" : "Afternoon";
+        std::string checkQuery = "SELECT COUNT(*) FROM Bookings WHERE RoomID = " + std::to_string(roomID) </span>
+                                 + " AND UserID = " + std::to_string(userID) 
+                                 + " AND Date_ = '" + date + "'"
+                                 + " AND TimeSlot = '" + timeSlotStr + "'";
+
+<span style = "background-color:#dfd">        if (mysql_query(conn, checkQuery.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ£æ¥é¢çº¦å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        MYSQL_RES* result = mysql_store_result(conn);
+        MYSQL_ROW row = mysql_fetch_row(result);
+        if (row &amp;&amp; std::stoi(row[0]) &gt; 0) {
+            std::cerr &lt;&lt; "è¯¥æ¶é´æ®µæ¨å·²æé¢çº¦ã\n";
+            mysql_free_result(result);
+            rollbackTransaction();
+            return false;</span>
+        }
+<span style = "background-color:#dfd">        mysql_free_result(result);</span>
+
+<span style = "background-color:#dfd">        if (isRoomBooked(roomID, date, timeSlot)) {</span>
+<span style = "background-color:#fdd">            std::cout &lt;&lt; "ä¼è®®å®¤å¨æ­¤æ¶é´æ®µå·²æé¢çº¦ã\n";
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        std::string statusStr;
+        switch (status) {</span>
+            case BookingStatus::Pending:
+<span style = "background-color:#dfd">                statusStr = "Pending";
+                break;</span>
+            case BookingStatus::Approved:
+<span style = "background-color:#fdd">                statusStr = "Approved";
+                break;</span>
+            case BookingStatus::Rejected:
+<span style = "background-color:#fdd">                statusStr = "Rejected";</span>
+                break;
+        }
+
+<span style = "background-color:#dfd">        std::string query = "INSERT INTO Bookings (RoomID, UserID, Date_, TimeSlot, Status_) VALUES (" </span>
+                            + std::to_string(roomID) + ", " 
+                            + std::to_string(userID) + ", '" 
+                            + date + "', '" 
+                            + timeSlotStr + "', '" 
+                            + statusStr + "')";
+
+<span style = "background-color:#dfd">        if (mysql_query(conn, query.c_str())) {
+            std::cerr &lt;&lt; "é¢çº¦ä¼è®®å®¤å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        commitTransaction(); // æäº¤äºå¡
+        return true;</span>
+<span style = "background-color:#fdd">    } catch (...) {
+        rollbackTransaction(); // ç¡®ä¿å¼å¸¸æ¶åæ»äºå¡
+        throw; // éæ°æåºå¼å¸¸
+    }</span>
+<span style = "background-color:#dfd">}</span>
+
+
+
+<span style = "background-color:#dfd">bool DatabaseManager::isRoomBooked(int roomID, const std::string&amp; date, TimeSlot timeSlot) {
+    std::string timeSlotStr = (timeSlot == TimeSlot::Morning) ? "Morning" : "Afternoon";
+    std::string query = "SELECT COUNT(*) FROM Bookings WHERE RoomID = " + std::to_string(roomID)</span>
+                        + " AND Date_ = '" + date + "' AND TimeSlot = '" + timeSlotStr + "'"
+                        + " AND Status_ = 'Approved'";  
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢é¢çº¦å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return true; // æ¥è¯¢å¤±è´¥æ¶ï¼è¿å true è¡¨ç¤ºä¸åè®¸é¢çº¦</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å­å¨æ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return true; // åä¸</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_ROW row = mysql_fetch_row(result);
+    int count = std::stoi(row[0]);
+    mysql_free_result(result);</span>
+
+<span style = "background-color:#dfd">    return count &gt; 0;  // å¦ææè®°å½ï¼è¡¨ç¤ºè¯¥æ¶é´æ®µå·²è¢«é¢çº¦
+}</span>
+
+
+<span style = "background-color:#dfd">void DatabaseManager::viewAllBookings() {</span>
+    // å¨ SQL æ¥è¯¢ä¸­åæ¬é¢çº¦ID
+<span style = "background-color:#dfd">    std::string query = "SELECT Bookings.BookingID, Bookings.Date_, Bookings.TimeSlot, Users.Name_, MeetingRooms.RoomName, MeetingRooms.Capacity, Bookings.Status_ "</span>
+                        "FROM Bookings "
+                        "JOIN Users ON Bookings.UserID = Users.UserID "
+                        "JOIN MeetingRooms ON Bookings.RoomID = MeetingRooms.RoomID";
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢é¢çº¦å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å­å¨æ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+    MYSQL_ROW row;
+<span style = "background-color:#dfd">    while ((row = mysql_fetch_row(result))) {
+        std::string bookingID = row[0];
+        std::string date = row[1];
+        std::string timeSlot = row[2];
+        std::string userName = row[3];
+        std::string roomName = row[4];
+        std::string capacity = row[5];
+        std::string status = row[6];</span>
+
+<span style = "background-color:#dfd">        std::cout &lt;&lt; "æ¥æ: " &lt;&lt; date &lt;&lt; ", "</span>
+                  &lt;&lt; "æ¶æ®µ: " &lt;&lt; timeSlot &lt;&lt; ", "
+                  &lt;&lt; "å§å: " &lt;&lt; userName &lt;&lt; ", "
+                  &lt;&lt; "ä¼è®®å®¤åç§°: " &lt;&lt; roomName &lt;&lt; ", "
+                  &lt;&lt; "å®¹é: " &lt;&lt; capacity &lt;&lt; ", "
+                  &lt;&lt; "é¢çº¦ç¶æ: " &lt;&lt; status &lt;&lt; std::endl;
+<span style = "background-color:#dfd">    }</span>
+
+<span style = "background-color:#dfd">    mysql_free_result(result);
+}</span>
+
+
+
+<span style = "background-color:#dfd">void DatabaseManager::viewBookingsByUser(int userID) {</span>
+    // æ§è¡ JOIN æä½ä»¥è·åæéä¿¡æ¯
+<span style = "background-color:#dfd">    std::string query = "SELECT Bookings.BookingID, Bookings.Date_, Bookings.TimeSlot, MeetingRooms.RoomName, MeetingRooms.Capacity, Bookings.Status_ "</span>
+                        "FROM Bookings "
+                        "JOIN MeetingRooms ON Bookings.RoomID = MeetingRooms.RoomID "
+                        "WHERE Bookings.UserID = " + std::to_string(userID);
+
+<span style = "background-color:#dfd">    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢é¢çº¦å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å­å¨æ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return;</span>
+    }
+
+    MYSQL_ROW row;
+<span style = "background-color:#dfd">    while ((row = mysql_fetch_row(result))) {
+        std::string bookingID = row[0];
+        std::string date = row[1];
+        std::string timeSlot = row[2];
+        std::string roomName = row[3];
+        std::string capacity = row[4];
+        std::string status = row[5];</span>
+
+<span style = "background-color:#dfd">        std::cout &lt;&lt; "é¢çº¦ID: " &lt;&lt; bookingID &lt;&lt; ", "</span>
+                  &lt;&lt; "æ¥æ: " &lt;&lt; date &lt;&lt; ", "
+                  &lt;&lt; "æ¶æ®µ: " &lt;&lt; timeSlot &lt;&lt; ", "
+                  &lt;&lt; "ä¼è®®å®¤åç§°: " &lt;&lt; roomName &lt;&lt; ", "
+                  &lt;&lt; "å®¹é: " &lt;&lt; capacity &lt;&lt; ", "
+                  &lt;&lt; "é¢çº¦ç¶æ: " &lt;&lt; status &lt;&lt; std::endl;
+<span style = "background-color:#dfd">    }</span>
+
+<span style = "background-color:#dfd">    mysql_free_result(result);
+}</span>
+
+
+
+<span style = "background-color:#dfd">bool DatabaseManager::cancelBooking(int bookingID) {</span>
+    try {
+<span style = "background-color:#dfd">        beginTransaction(); // å¼å§äºå¡</span>
+
+        // é¦åæ£æ¥ bookingID æ¯å¦å­å¨
+<span style = "background-color:#dfd">        std::string checkQuery = "SELECT COUNT(*) FROM Bookings WHERE BookingID = " + std::to_string(bookingID);
+        if (mysql_query(conn, checkQuery.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ£æ¥é¢çº¦å­å¨æ§å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction();
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        MYSQL_RES* result = mysql_store_result(conn);
+        MYSQL_ROW row = mysql_fetch_row(result);
+        if (!row || std::stoi(row[0]) == 0) {
+            std::cerr &lt;&lt; "é¢çº¦ä¸å­å¨ã\n" ;
+            mysql_free_result(result);
+            rollbackTransaction();
+            return false;</span>
+        }
+<span style = "background-color:#dfd">        mysql_free_result(result);</span>
+
+        // æ´æ°é¢çº¦ç¶æ
+<span style = "background-color:#dfd">        std::string query = "UPDATE Bookings SET Status_ = 'Cancelled' WHERE BookingID = " + std::to_string(bookingID);
+        if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ´æ°é¢çº¦ç¶æä¸ºåæ¶å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        commitTransaction(); // æäº¤äºå¡
+        return true;</span>
+    }
+<span style = "background-color:#fdd">    catch (...) {
+        rollbackTransaction(); // ç¡®ä¿å¼å¸¸æ¶åæ»äºå¡
+        throw; // éæ°æåºå¼å¸¸
+    }</span>
+<span style = "background-color:#dfd">}</span>
+
+
+
+<span style = "background-color:#dfd">int DatabaseManager::getPendingBookingID() const{
+    std::string query = "SELECT BookingID FROM Bookings WHERE Status_ = 'Pending' LIMIT 1";
+    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ¥è¯¢å¾å®¡æ¹é¢çº¦å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return -1;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "å­å¨æ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return -1;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_ROW row = mysql_fetch_row(result);
+    int bookingID = -1;
+    if (row) {
+        bookingID = std::stoi(row[0]);</span>
+    }
+
+<span style = "background-color:#dfd">    mysql_free_result(result);
+    return bookingID;
+}</span>
+
+
+
+<span style = "background-color:#dfd">bool DatabaseManager::updateBookingStatus(int bookingID, BookingStatus newStatus) {</span>
+    try {
+<span style = "background-color:#dfd">        beginTransaction(); // å¼å§äºå¡</span>
+
+        // é¦åæ£æ¥é¢çº¦å½åçç¶æ
+<span style = "background-color:#dfd">        std::string checkQuery = "SELECT Status_ FROM Bookings WHERE BookingID = " + std::to_string(bookingID) + " FOR UPDATE";
+        if (mysql_query(conn, checkQuery.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ£æ¥é¢çº¦ç¶æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        MYSQL_RES* result = mysql_store_result(conn);
+        if (!result) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "è·åé¢çº¦ç¶æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction();
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        MYSQL_ROW row = mysql_fetch_row(result);
+        if (!row || std::string(row[0]) == "Approved" || std::string(row[0]) == "Rejected") {
+            mysql_free_result(result);
+            std::lock_guard&lt;std::mutex&gt; guard(logMutex);
+            std::cerr &lt;&lt; "è¯¥é¢çº¦å·²è¢«å¶ä»è¡æ¿äººåå®¡æ¹"  &lt;&lt; std::endl;
+            rollbackTransaction();
+            return false; // å¦æé¢çº¦å·²è¢«å¤çææ æ³è·åç¶æï¼åä¸è¿è¡æ´æ°</span>
+        }
+<span style = "background-color:#dfd">        mysql_free_result(result);</span>
+
+        // æ´æ°é¢çº¦ç¶æ
+<span style = "background-color:#dfd">        std::string statusStr = newStatus == BookingStatus::Approved ? "Approved" : "Rejected";
+        std::string query = "UPDATE Bookings SET Status_ = '" + statusStr + "' WHERE BookingID = " + std::to_string(bookingID);</span>
+
+<span style = "background-color:#dfd">        if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ´æ°é¢çº¦ç¶æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            rollbackTransaction(); // åæ»äºå¡
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        commitTransaction(); // æäº¤äºå¡
+        return true;</span>
+<span style = "background-color:#fdd">    } catch (...) {
+        rollbackTransaction(); // ç¡®ä¿å¼å¸¸æ¶åæ»äºå¡
+        throw; // éæ°æåºå¼å¸¸
+    }</span>
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">User DatabaseManager::getUserByUsernameAndPassword(const std::string&amp; username, const std::string&amp; password) const{</span>
+
+<span style = "background-color:#dfd">    std::string query = "SELECT UserID, EmployeeID, Name_, UserType FROM users WHERE Username = '" </span>
+                        + username + "' AND Password_ = '" + password + "'";
+<span style = "background-color:#dfd">    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ°æ®åºæ¥è¯¢å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        throw std::runtime_error("æ°æ®åºæ¥è¯¢å¤±è´¥");</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    if (result == NULL) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "è·åæ¥è¯¢ç»æå¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        throw std::runtime_error("è·åæ¥è¯¢ç»æå¤±è´¥");</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_ROW row = mysql_fetch_row(result);
+    if (!row) {</span>
+<span style = "background-color:#fdd">        mysql_free_result(result);
+        throw std::runtime_error("æªæ¾å°ç¨æ·æå¯ç éè¯¯");</span>
+    }
+
+<span style = "background-color:#dfd">    int userID = std::stoi(row[0]);
+    std::string employeeID = row[1];
+    std::string name = row[2];</span>
+    UserType userType;
+<span style = "background-color:#dfd">    if (row[3] != NULL) {
+        userType = DatabaseManager::stringToUserType(row[3]);
+        std::cout &lt;&lt; userType ;
+    } else {</span>
+<span style = "background-color:#fdd">        throw std::runtime_error("ç¨æ·ç±»åå­æ®µä¸ºç©º");</span>
+    }
+<span style = "background-color:#dfd">    mysql_free_result(result);
+    return User(userID, employeeID, name, username, password, userType);
+}</span>
+
+
+<span style = "background-color:#dfd">bool DatabaseManager::updatePassword(int userID, const std::string&amp; newPassword) {</span>
+    // é¦åæ£æ¥ userID æ¯å¦å­å¨
+<span style = "background-color:#dfd">    std::string checkQuery = "SELECT COUNT(*) FROM Users WHERE UserID = " + std::to_string(userID);
+    if (mysql_query(conn, checkQuery.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ£æ¥ç¨æ·å­å¨æ§å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return false;</span>
+    }
+
+<span style = "background-color:#dfd">    MYSQL_RES* result = mysql_store_result(conn);
+    MYSQL_ROW row = mysql_fetch_row(result);
+    if (!row || std::stoi(row[0]) == 0) {
+        std::cerr &lt;&lt; "ç¨æ·ID " &lt;&lt; userID &lt;&lt; " ä¸å­å¨ã\n";
+        mysql_free_result(result);
+        return false;</span>
+    }
+<span style = "background-color:#dfd">    mysql_free_result(result);</span>
+
+    // æ´æ°å¯ç 
+<span style = "background-color:#dfd">    std::string query = "UPDATE Users SET Password_ = '" + newPassword + "' WHERE UserID = " + std::to_string(userID);
+    if (mysql_query(conn, query.c_str())) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ´æ°å¯ç å¤±è´¥: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+        return false;</span>
+    }
+<span style = "background-color:#dfd">    return true;
+}</span>
+</pre>
+	</body>
+</html>

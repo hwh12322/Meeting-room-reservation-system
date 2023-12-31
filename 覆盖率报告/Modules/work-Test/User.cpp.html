@@ -1,0 +1,54 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>User.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+	<body onload="prettyPrint()">
+        <h4></h4>
+		<pre class="prettyprint lang-cpp linenums">
+#include "User.h"
+
+User::User(int userID, const std::string&amp; employeeID, const std::string&amp; name, 
+           const std::string&amp; username, const std::string&amp; password, UserType userType) 
+<span style = "background-color:#dfd">    : userID(userID), employeeID(employeeID), name(name), 
+      username(username), password(password), userType(userType) {}</span>
+
+<span style = "background-color:#dfd">int User::getUserID() const {
+    return userID;
+}</span>
+
+<span style = "background-color:#dfd">std::string User::getEmployeeID() const {
+    return employeeID;
+}</span>
+
+<span style = "background-color:#dfd">std::string User::getName() const {
+    return name;
+}</span>
+
+<span style = "background-color:#dfd">std::string User::getUsername() const {
+    return username;
+}</span>
+
+<span style = "background-color:#dfd">std::string User::getPassword() const {
+    return password;
+}</span>
+
+<span style = "background-color:#dfd">UserType User::getUserType() const {
+    return userType;
+}</span>
+
+
+
+<span style = "background-color:#dfd">std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const UserType userType) {
+    switch (userType) {
+        case UserType::Business: os &lt;&lt; "Business"; break;</span>
+<span style = "background-color:#fdd">        case UserType::Executive: os &lt;&lt; "Executive"; break;
+        case UserType::Admin: os &lt;&lt; "Admin"; break;</span>
+    }
+<span style = "background-color:#dfd">    return os;
+}</span></pre>
+	</body>
+</html>

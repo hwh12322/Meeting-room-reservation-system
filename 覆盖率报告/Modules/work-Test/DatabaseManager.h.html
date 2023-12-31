@@ -1,0 +1,84 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>DatabaseManager.h</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+	<body onload="prettyPrint()">
+        <h4></h4>
+		<pre class="prettyprint lang-cpp linenums">
+#ifndef DATABASEMANAGER_H
+#define DATABASEMANAGER_H
+#include "Bookings.h"
+#include "User.h"
+#include &lt;mysql.h&gt;
+#include &lt;string&gt;
+#include &lt;iostream&gt;
+#include &lt;mutex&gt;
+#include &lt;iomanip&gt;
+
+<span style = "background-color:#dfd"> std::mutex logMutex;</span>
+
+class DatabaseManager {
+public:
+    DatabaseManager(const std::string&amp; db_host, const std::string&amp; db_user,
+                    const std::string&amp; db_password, const std::string&amp; db_name);
+    ~DatabaseManager();
+    UserType stringToUserType(const std::string&amp; userTypeStr) const;
+    std::string userTypeToString(const UserType usertype) const;
+    bool addUser(const std::string&amp; employeeID, const std::string&amp; name, 
+                              const std::string&amp; username, const std::string&amp; password, 
+                              UserType userType);
+    void viewUsers(UserType userType);
+    void viewMeetingRooms();
+    bool clearBookings();
+    bool deleteUser(int userID);
+    bool handleAssociatedData(int userID);
+    void viewAllBookings();
+    void viewBookingsByUser(int userID);
+    bool cancelBooking(int bookingID);
+    int getPendingBookingID()const;
+    bool bookRoom(int roomID, int userID, const std::string&amp; date, 
+                               TimeSlot timeSlot, BookingStatus status);
+    bool isRoomBooked(int roomID, const std::string&amp; date, TimeSlot timeSlot);
+    bool updateBookingStatus(int bookingID, BookingStatus newStatus);
+    User getUserByUsernameAndPassword(const std::string&amp; username, const std::string&amp; password)const;
+    bool updatePassword(int userID, const std::string&amp; newPassword);
+
+private:
+    MYSQL* conn;
+    void connect(const std::string&amp; db_host, const std::string&amp; db_user,
+                 const std::string&amp; db_password, const std::string&amp; db_name);
+<span style = "background-color:#dfd">    void beginTransaction() {
+        if (mysql_query(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ æ³è®¾ç½®äºå¡éç¦»çº§å«: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            throw std::runtime_error("æ æ³è®¾ç½®äºå¡éç¦»çº§å«");</span>
+        }
+<span style = "background-color:#dfd">        if (mysql_query(conn, "START TRANSACTION")) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ æ³å¼å§äºå¡: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            throw std::runtime_error("æ æ³å¼å§äºå¡");</span>
+        }
+<span style = "background-color:#dfd">    }
+    void commitTransaction() {
+        if (mysql_query(conn, "COMMIT")) {</span>
+<span style = "background-color:#fdd">            std::cerr &lt;&lt; "æ æ³æäº¤äºå¡: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;
+            throw std::runtime_error("æ æ³æäº¤äºå¡");</span>
+        }
+<span style = "background-color:#dfd">    }
+    void rollbackTransaction() {
+    if (mysql_query(conn, "ROLLBACK")) {</span>
+<span style = "background-color:#fdd">        std::cerr &lt;&lt; "æ æ³åæ»äºå¡: " &lt;&lt; mysql_error(conn) &lt;&lt; std::endl;</span>
+        // è¿éä¸æåºå¼å¸¸ï¼å ä¸ºåæ»æ¬èº«å¯è½æ¯å¨å¼å¸¸å¤çä¸­è°ç¨ç
+        }
+<span style = "background-color:#dfd">    }</span>
+                 
+};
+
+
+
+
+#endif // DATABASEMANAGER_H</pre>
+	</body>
+</html>
